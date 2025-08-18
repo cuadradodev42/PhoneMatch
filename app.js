@@ -1,60 +1,7 @@
-// --- LÓGICA DE LA APLICACIÓN ---
+// --- LÓGICA DE LA INTERFAZ DE USUARIO (UI) ---
 
 // Variable global para el idioma actual
 let currentLang = 'es';
-
-/**
- * Calcula las puntuaciones principales (0-10) para un smartphone basándose en sus datos detallados.
- * Esta función actúa como "traductor" entre los datos brutos del móvil y las categorías que usamos para puntuar.
- * @param {object} details - Las especificaciones detalladas del smartphone.
- * @returns {object} - Un objeto que contiene las puntuaciones principales calculadas.
- */
-function calculateMainScores(details) {
-    const scores = {};
-
-    // --- Puntuación de Batería ---
-    const capacityScore = Math.min(10, (details.battery.capacity / 5000) * 10);
-    const chargeScore = Math.min(10, (details.battery.fast_charge / 100) * 10);
-    const consumptionScore = 10 - details.battery.energy_consumption;
-    const wirelessScore = details.battery.wireless_charge ? 8 : 2;
-    scores.battery = (capacityScore * 0.4) + (chargeScore * 0.3) + (consumptionScore * 0.2) + (wirelessScore * 0.1);
-
-    // --- Puntuación de Rendimiento ---
-    const ramScore = Math.min(10, (details.performance.ram / 12) * 10);
-    scores.performance = (details.performance.cpu * 0.4) + (details.performance.gpu * 0.4) + (ramScore * 0.2);
-
-    // --- Puntuación de Diseño ---
-    scores.design = (details.design.material_score * 0.3) + (details.design.water_resistance * 0.3) + (details.design.dust_resistance * 0.2) + (details.design.drop_resistance * 0.2);
-
-    // --- Puntuación de Conectividad ---
-    const features = [details.connectivity.nfc, details.connectivity.data5g, details.connectivity.lte, details.connectivity.jack];
-    const featureScore = (features.filter(Boolean).length / features.length) * 10;
-    const numericScores = [details.connectivity.precision_gps, details.connectivity.wifi_speed, (details.connectivity.bluetooth_version * 2), (details.connectivity.usb_version * 3)];
-    const numericAvg = numericScores.reduce((a, b) => a + b, 0) / numericScores.length;
-    scores.connectivity = (featureScore * 0.4) + (numericAvg * 0.6);
-
-    // --- Puntuaciones Audiovisuales ---
-    scores.sound = details.audiovisual.audio_score;
-    const oisEisScore = (details.audiovisual.ois ? 5 : 0) + (details.audiovisual.eis ? 5 : 0);
-    scores.camera_photo = (details.audiovisual.photo_score * 0.7) + (oisEisScore * 0.3);
-    scores.camera_video = (details.audiovisual.video_score * 0.7) + (oisEisScore * 0.3);
-
-    // --- Puntuación de Software ---
-    scores.software = (details.software.compatibility + details.software.design + details.software.efficiency) / 3;
-
-    // --- Puntuación de Extras ---
-    scores.extras = Math.min(10, details.extras.number_of_extras * 2 + (details.extras.dual_sim ? 2 : 0));
-    
-    // --- Puntuación de Pantalla ---
-    scores.screen = (details.screen.color * 0.4) + (details.screen.brightness * 0.4) + ((details.screen.oled ? 10 : 6) * 0.2);
-
-    // Se asegura de que ninguna puntuación supere el 10
-    for(const key in scores) {
-        scores[key] = Math.min(10, scores[key]);
-    }
-
-    return scores;
-}
 
 // El evento DOMContentLoaded se asegura de que todo el HTML esté cargado antes de ejecutar el script.
 document.addEventListener('DOMContentLoaded', () => {
@@ -121,55 +68,23 @@ document.addEventListener('DOMContentLoaded', () => {
         recommendBtn.addEventListener('click', runRecommendation);
     }
 
+    // --- FUNCIÓN INTERMEDIARIA ---
+    // Esta función ahora solo recoge los datos y llama al motor.
     function runRecommendation() {
+        // 1. Recoger selecciones del usuario desde el HTML
         const selectedUseKeys = Array.from(document.querySelectorAll('.use-card.selected')).map(c => c.dataset.use);
         const selectedPriceId = document.querySelector('.price-card.selected').dataset.priceId;
-        const priceRange = priceRanges.find(p => p.id === selectedPriceId);
 
-        // 1. Procesar todos los móviles para calcular sus puntuaciones de alto nivel
-        const phonesToProcess = smartphones.map(phone => {
-            const scores = phone.details ? calculateMainScores(phone.details) : (phone.scores || {});
-            return { ...phone, scores };
-        });
+        // 2. Llamar al motor de recomendación con todos los datos necesarios
+        // (asume que calculateRecommendation está disponible globalmente desde engine.js)
+        const bestPhone = calculateRecommendation(selectedUseKeys, selectedPriceId, smartphones, useCases, priceRanges);
 
-        // 2. Filtrar los móviles por el rango de precio seleccionado
-        const filteredPhones = phonesToProcess.filter(phone => phone.price >= priceRange.min && phone.price <= priceRange.max);
-
-        if (filteredPhones.length === 0) {
+        // 3. Mostrar el resultado que nos ha devuelto el motor
+        if (bestPhone) {
+            displayResult(bestPhone);
+        } else {
             displayNoResults();
-            return;
         }
-
-        // 3. Calcular la puntuación final para cada móvil filtrado
-        const scoredPhones = filteredPhones.map(phone => {
-            let totalWeightedScore = 0;
-            let totalWeight = 0;
-
-            selectedUseKeys.forEach(useKey => {
-                for (const param in useCases[useKey].weights) {
-                    const weight = useCases[useKey].weights[param];
-                    const score = phone.scores[param] || 0;
-                    totalWeightedScore += score * weight;
-                    totalWeight += weight;
-                }
-            });
-            
-            const qualityScore = totalWeight > 0 ? (totalWeightedScore / totalWeight) : 0;
-
-            const PRACTICAL_MAX_PRICE = 2000;
-            const rangeMin = priceRange.min;
-            const rangeMax = priceRange.max === Infinity ? PRACTICAL_MAX_PRICE : priceRange.max;
-            const priceScore = (rangeMax - rangeMin > 0) ? Math.max(0, 1 - ((phone.price - rangeMin) / (rangeMax - rangeMin))) : 1;
-            
-            // Puntuación final: 70% calidad, 30% precio (ajustado a una escala de 10)
-            const finalScore = (qualityScore * 0.7) + (priceScore * 3);
-
-            return { ...phone, finalScore };
-        });
-
-        scoredPhones.sort((a, b) => b.finalScore - a.finalScore);
-        const bestPhone = scoredPhones[0];
-        displayResult(bestPhone);
     }
 
     function displayResult(phone) {
@@ -196,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="mt-4 bg-gray-900/70 p-3 rounded-lg">
                         <p class="text-sm text-gray-400 uppercase" data-translate-key="quality_price_score">${translations[currentLang]['quality_price_score']}</p>
                         <p class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-green-500">
-                            ${Math.min(10, phone.finalScore).toFixed(1)}<span class="text-2xl text-gray-400">/10</span>
+                            ${phone.finalScore.toFixed(1)}<span class="text-2xl text-gray-400">/10</span>
                         </p>
                     </div>
                 </div>

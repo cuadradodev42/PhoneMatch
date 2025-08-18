@@ -141,11 +141,22 @@ function calculateRecommendation(selectedUseKeys, selectedPriceId, allSmartphone
             camera_photo: getDetailValue(phone, 'photo_score'),
             camera_video: getDetailValue(phone, 'video_score'),
         };
-        return { ...phone, qualityScore, scores: displayScores };
+    /*
+    let scoreValues = 0;
+        for (const key in displayScores) {
+            const value = displayScores[key];
+            if (typeof value === 'number') {
+                scoreValues += value;
+            } else if (typeof value === 'boolean') {
+                scoreValues += value * 2;
+            } else
+                scoreValues += 0; // Si no es un número ni booleano, asignar 0
+        }
+        // Calcular la puntuación total de calidad
+    const totalQuality = scoreValues / displayScores.length;
+    */
+        return { ...phone, qualityScore, scores: displayScores};
     });
-
-    const scoreValues = Object.values(displayScores);
-    const totalQuality = scoreValues.length > 0 ? scoreValues.reduce((sum, val) => sum + val, 0) / scoreValues.length : 0;
     // 4. Filtrar por precio y calcular puntuación final
     const filteredPhones = allPhonesProcessed.filter(phone => phone.price >= priceRange.min && phone.price <= priceRange.max);
     if (filteredPhones.length === 0) {
@@ -157,8 +168,8 @@ function calculateRecommendation(selectedUseKeys, selectedPriceId, allSmartphone
         const rangeMin = priceRange.min;
         const rangeMax = priceRange.max === Infinity ? PRACTICAL_MAX_PRICE : priceRange.max;
         const priceScore = (rangeMax - rangeMin > 0) ? Math.max(0, 1 - ((phone.price - rangeMin) / (rangeMax - rangeMin))) : 1;
-        const absoluteQualityPriceScore = Math.min(10, totalQuality / priceScore);
-        const finalScore = ((phone.qualityScore * 0.5) + (priceScore * 0.3) + (absoluteQualityPriceScore * 0.2)) * 10;
+        //const absoluteQualityPriceScore = Math.min(10, allPhonesProcessed.totalQuality / priceScore);
+        const finalScore = ((phone.qualityScore * 0.6) + (priceScore * 0.4)) * 10;
         return { ...phone, finalScore };
     });
 
