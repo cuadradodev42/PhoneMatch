@@ -4,7 +4,7 @@ const translations = {
         app_subtitle: "Find your ideal smartphone based on your use and budget.",
         step1_title: "1. Choose your main uses",
         step2_title: "2. Select your budget",
-        recommend_button: "Find My Phone",
+        recommend_button: "Find My Next Phone",
         gaming: "Gaming",
         photo: "Photography",
         video: "Video",

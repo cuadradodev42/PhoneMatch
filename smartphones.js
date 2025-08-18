@@ -70,7 +70,7 @@ const smartphones = [
   },
   {
     "name": "Samsung Galaxy S23 Ultra",
-    "price": 1399,
+    "price": 1199,
     "image": "https://placehold.co/300x300/000000/ffffff?text=Samsung+Galaxy+S23+Ultra",
     "details": {
       "battery": {
@@ -137,9 +137,9 @@ const smartphones = [
     }
   },
   {
-    "name": "Google Pixel 8 Pro",
+    "name": "Google Pixel 9 Pro",
     "price": 999,
-    "image": "https://placehold.co/300x300/000000/ffffff?text=Google+Pixel+8+Pro",
+    "image": "https://placehold.co/300x300/000000/ffffff?text=Google+Pixel+9+Pro",
     "details": {
       "battery": {
         "capacity": 5050,
@@ -307,7 +307,7 @@ const smartphones = [
   },
   {
     "name": "Sony Xperia 1 V",
-    "price": 1299,
+    "price": 1199,
     "image": "https://placehold.co/300x300/000000/ffffff?text=Sony+Xperia+1+V",
     "details": {
       "battery": {
@@ -358,7 +358,7 @@ const smartphones = [
   },
   {
     "name": "Oppo Find X6 Pro",
-    "price": 1099,
+    "price": 999,
     "image": "https://placehold.co/300x300/000000/ffffff?text=Oppo+Find+X6+Pro",
     "details": {
       "battery": {
@@ -868,7 +868,7 @@ const smartphones = [
   },
   {
     "name": "Nothing Phone (2)",
-    "price": 599,
+    "price": 499,
     "image": "https://placehold.co/300x300/000000/ffffff?text=Nothing+Phone+(2)",
     "details": {
       "battery": {

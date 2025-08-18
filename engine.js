@@ -31,7 +31,7 @@ function normalizeValue(key, value) {
         case 'size':
             // Óptimo entre 6.4-6.7", penalizar extremos
             if (value >= 6.4 && value <= 6.7) return 10;
-            return Math.max(0, 10 - Math.abs(value - 6.55) * 5);
+            return Math.max(0, 10 - Math.abs(value - 5.5) * 5);
             
         case 'refresh_rate':
             // 90Hz = 0, 165Hz = 10
@@ -144,9 +144,10 @@ function calculateRecommendation(selectedUseKeys, selectedPriceId, allSmartphone
         return { ...phone, qualityScore, scores: displayScores };
     });
 
+    const scoreValues = Object.values(displayScores);
+    const totalQuality = scoreValues.length > 0 ? scoreValues.reduce((sum, val) => sum + val, 0) / scoreValues.length : 0;
     // 4. Filtrar por precio y calcular puntuación final
     const filteredPhones = allPhonesProcessed.filter(phone => phone.price >= priceRange.min && phone.price <= priceRange.max);
-
     if (filteredPhones.length === 0) {
         return null; // No se encontraron resultados
     }
@@ -156,7 +157,8 @@ function calculateRecommendation(selectedUseKeys, selectedPriceId, allSmartphone
         const rangeMin = priceRange.min;
         const rangeMax = priceRange.max === Infinity ? PRACTICAL_MAX_PRICE : priceRange.max;
         const priceScore = (rangeMax - rangeMin > 0) ? Math.max(0, 1 - ((phone.price - rangeMin) / (rangeMax - rangeMin))) : 1;
-        const finalScore = ((phone.qualityScore * 0.5) + (priceScore * 0.5)) * 10;
+        const absoluteQualityPriceScore = Math.min(10, totalQuality / priceScore);
+        const finalScore = ((phone.qualityScore * 0.5) + (priceScore * 0.3) + (absoluteQualityPriceScore * 0.2)) * 10;
         return { ...phone, finalScore };
     });
 
