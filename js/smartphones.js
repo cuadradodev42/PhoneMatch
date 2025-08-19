@@ -1717,3 +1717,4 @@ const smartphones = [
     }
   }
 ]
+module.exports = smartphones;

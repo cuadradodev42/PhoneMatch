@@ -11,7 +11,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const recommendBtn = document.getElementById('recommend-btn');
 
     // Función inicial para construir la interfaz de usuario
-    function initializeApp() {
+    async function initializeApp() {
+        try 
+        {
+            const response = await fetch('http://localhost:3000/api/smartphones');
+            if (!response.ok){
+                throw new Error('Error del servidor: ${response.statusText}');
+            }
+            smartphones = await response.json();
+        }catch (error) {
+            console.error("no se pudo cargar la lista de móviles:", error);
+            alert("Error: No se pudo conectar con el servidor. Asegúrate de que el servidor (server.js) está en ejecución.");
+            return; // Detiene la ejecución si no hay datos
+        }
         populateUI();
         addEventListeners();
         setLanguage('es'); // Establecer idioma inicial
