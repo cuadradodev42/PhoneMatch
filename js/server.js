@@ -1,27 +1,25 @@
-// server.js (adaptado para PostgreSQL)
+// server.js (adaptado para PostgreSQL y producción en Render)
 
 const express = require('express');
-const { Pool } = require('pg'); // Importamos el Pool de pg
+const { Pool } = require('pg');
 const cors = require('cors');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000; // Render asigna el puerto automáticamente
 
 app.use(cors());
 
-// Configuración de la conexión a PostgreSQL
-// Usa el usuario y contraseña que creaste durante la instalación
+// Configuración de la conexión a PostgreSQL usando la variable de entorno
+// Render inyectará aquí la "External Connection URL" que configuraste.
 const pool = new Pool({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'phonematch',
-    password: '1234', // <-- ¡CAMBIA ESTO!
-    port: 5432, // Puerto por defecto de PostgreSQL
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false // Necesario para las conexiones en Render
+    }
 });
 
 app.get('/api/smartphones', async (req, res) => {
     try {
-        // La consulta SQL es prácticamente idéntica
         const sqlQuery = `
             SELECT 
                 s.id, s.name, s.price, s.image,
@@ -71,17 +69,5 @@ app.get('/api/smartphones', async (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`🚀 Servidor corriendo en http://localhost:${port}`);
+    console.log(`🚀 Servidor corriendo en el puerto ${port}`);
 });
-/*
-```
-
-### Flujo de Trabajo Final
-
-1.  **Ejecuta el script `.sql`** en pgAdmin para crear las tablas.
-2.  **Adapta y ejecuta tu `seeder.js`** para PostgreSQL si quieres cargar los datos automáticamente (requerirá cambios similares a los del `server.js`).
-3.  **Arranca tu servidor:** `node server.js`.
-4.  **Abre tu `index.html`** en el navegador.
-
-¡Listo! Ahora tu aplicación está funcionando localmente con PostgreSQL, exactamente igual que lo hará en Rend
-*/
