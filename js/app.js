@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function initializeApp() {
         try 
         {
-            const response = await fetch('http://localhost:3000/api/smartphones');
+            const response = await fetch('https://phonematch.onrender.com');
             if (!response.ok){
                 throw new Error('Error del servidor: ${response.statusText}');
             }
