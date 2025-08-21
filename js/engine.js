@@ -1,10 +1,7 @@
 // --- MOTOR DE RECOMENDACIÓN DE PHONEMATH ---
 
 /**
- * Función auxiliar para obtener de forma segura el valor de una propiedad anidada.
- */
-/**
- * Función para normalizar valores a escala 0-10
+ * Función para normalizar valores de especificaciones a una escala de 0-10.
  */
 function normalizeValue(key, value) {
     if (typeof value === 'boolean') {
@@ -17,8 +14,8 @@ function normalizeValue(key, value) {
     
     switch (key) {
         case 'capacity':
-            // 4300mAh = 0, 6000mAh = 10
-            return Math.min(10, Math.max(0, (value - 3200) / 200));
+            // 3200mAh = 0, 6000mAh = 10
+            return Math.min(10, Math.max(0, (value - 3200) / 280));
             
         case 'fast_charge':
             // 18W = 0, 240W = 10  
@@ -26,12 +23,12 @@ function normalizeValue(key, value) {
             
         case 'ram':
             // 6GB = 0, 16GB = 10
-            return Math.min(10, Math.max(0, (value - 6) / 1));
+            return Math.min(10, Math.max(0, (value - 6)));
             
         case 'size':
             // Óptimo entre 6.4-6.7", penalizar extremos
             if (value >= 6.4 && value <= 6.7) return 10;
-            return Math.max(0, 10 - Math.abs(value - 5.5) * 5);
+            return Math.max(0, 10 - Math.abs(value - 6.55) * 5);
             
         case 'refresh_rate':
             // 90Hz = 0, 165Hz = 10
@@ -52,33 +49,23 @@ function normalizeValue(key, value) {
 }
 
 /**
- * Función auxiliar para obtener de forma segura el valor de una propiedad anidada.
+ * Función auxiliar para obtener de forma segura el valor de una propiedad anidada y normalizarla.
  */
 function getDetailValue(phone, key) {
     if (!phone.details) return 0;
     const d = phone.details;
     
-    // Mapeo corregido
     const keyMap = {
-        // Battery
         'capacity': d.battery, 'fast_charge': d.battery, 'energy_consumption': d.battery, 'wireless_charge': d.battery,
-        // Performance  
         'ram': d.performance, 'cpu': d.performance, 'gpu': d.performance,
-        // Design
         'material_score': d.design, 'water_resistance': d.design, 'dust_resistance': d.design, 'drop_resistance': d.design,
-        // Connectivity
         'nfc': d.connectivity, 'data5g': d.connectivity, 'lte': d.connectivity, 'jack': d.connectivity, 'precision_gps': d.connectivity, 'wifi_speed': d.connectivity, 'bluetooth_version': d.connectivity, 'usb_version': d.connectivity,
-        // Audiovisual
         'audio_score': d.audiovisual, 'video_score': d.audiovisual, 'photo_score': d.audiovisual, 'zoom': d.audiovisual, 'ois': d.audiovisual, 'eis': d.audiovisual, 'pro_video': d.audiovisual,
-        // Software - CORREGIDO
         'software_compatibility': d.software, 'software_design': d.software, 'software_efficiency': d.software, 'software_updates': d.software, 'software_features': d.software, 'software_security': d.software,
-        // Extras
         'number_of_extras': d.extras, 'dual_sim': d.extras, 'expandable_storage': d.extras, 'fingerprint': d.extras, 'face_unlock': d.extras, 'ir_blaster': d.extras, 'stereo_speakers': d.extras,
-        // Screen
         'color': d.screen, 'size': d.screen, 'brightness': d.screen, 'oled': d.screen, 'refresh_rate': d.screen, 'hdr': d.screen, 'resolution': d.screen, 'protection': d.screen,
     };
 
-    // Obtener valor base
     let rawValue;
     if (key.startsWith('software_')) {
         const softwareProperty = key.replace('software_', '');
@@ -87,19 +74,12 @@ function getDetailValue(phone, key) {
         rawValue = keyMap[key]?.[key] ?? 0;
     }
 
-    // APLICAR NORMALIZACIÓN
     return normalizeValue(key, rawValue);
 }
 
 /**
  * La función principal del motor. Recibe las selecciones del usuario y la base de datos,
  * y devuelve el mejor smartphone o null si no hay resultados.
- * @param {Array<string>} selectedUseKeys - Array con los usos seleccionados (ej. ['gaming', 'photo']).
- * @param {string} selectedPriceId - El ID del rango de precio seleccionado (ej. 'p3').
- * @param {Array<object>} allSmartphones - La lista completa de smartphones.
- * @param {object} allUseCases - El objeto completo con los casos de uso y sus pesos.
- * @param {Array<object>} allPriceRanges - La lista completa de rangos de precio.
- * @returns {object|null} - El objeto del smartphone recomendado o null.
  */
 function calculateRecommendation(selectedUseKeys, selectedPriceId, allSmartphones, allUseCases, allPriceRanges) {
     const priceRange = allPriceRanges.find(p => p.id === selectedPriceId);
@@ -115,24 +95,26 @@ function calculateRecommendation(selectedUseKeys, selectedPriceId, allSmartphone
         }
     });
 
-    // 2. Calcular la puntuación máxima teórica posible
+    // 2. Calcular la puntuación máxima teórica posible para el uso seleccionado
     let maxPossibleScore = 0;
     for (const param in masterWeights) {
         maxPossibleScore += masterWeights[param] * 10;
     }
 
-    // 3. Procesar todos los móviles para obtener su puntuación de calidad
+    // 3. Pre-procesar TODOS los móviles para calcular sus puntuaciones clave
     const allPhonesProcessed = allSmartphones.map(phone => {
         if (!phone.details) {
-            return { ...phone, qualityScore: 0, scores: {} };
+            return { ...phone, useCaseQualityScore: 0, totalQuality: 0, scores: {} };
         }
-        let rawScore = 0;
+
+        // a) Calidad específica para el uso seleccionado
+        let rawUseCaseScore = 0;
         for (const param in masterWeights) {
-            let value = getDetailValue(phone, param);
-            if (typeof value === 'boolean') value = value ? 10 : 0;
-            rawScore += value * masterWeights[param];
+            rawUseCaseScore += getDetailValue(phone, param) * masterWeights[param];
         }
-        const qualityScore = maxPossibleScore > 0 ? (rawScore / maxPossibleScore) : 0;
+        const useCaseQualityScore = maxPossibleScore > 0 ? (rawUseCaseScore / maxPossibleScore) : 0; // Normalizada 0-1
+
+        // b) Puntuaciones para mostrar en la UI
         const displayScores = {
             performance: (getDetailValue(phone, 'cpu') + getDetailValue(phone, 'gpu')) / 2,
             battery: getDetailValue(phone, 'capacity'),
@@ -141,39 +123,54 @@ function calculateRecommendation(selectedUseKeys, selectedPriceId, allSmartphone
             camera_photo: getDetailValue(phone, 'photo_score'),
             camera_video: getDetailValue(phone, 'video_score'),
         };
-    /*
-    let scoreValues = 0;
-        for (const key in displayScores) {
-            const value = displayScores[key];
-            if (typeof value === 'number') {
-                scoreValues += value;
-            } else if (typeof value === 'boolean') {
-                scoreValues += value * 2;
-            } else
-                scoreValues += 0; // Si no es un número ni booleano, asignar 0
-        }
-        // Calcular la puntuación total de calidad
-    const totalQuality = scoreValues / displayScores.length;
-    */
-        return { ...phone, qualityScore, scores: displayScores};
+
+        // c) Calidad total (independiente del uso) para el cálculo de QP absoluta
+        const scoreValues = Object.values(displayScores);
+        const totalQuality = scoreValues.length > 0 ? scoreValues.reduce((sum, val) => sum + val, 0) / scoreValues.length : 0;
+
+        return { ...phone, useCaseQualityScore, totalQuality, scores: displayScores };
     });
-    // 4. Filtrar por precio y calcular puntuación final
-    const filteredPhones = allPhonesProcessed.filter(phone => phone.price >= priceRange.min && phone.price <= priceRange.max);
+
+    // 4. Calcular la calidad-precio absoluta para TODOS los móviles
+    let maxAbsoluteValue = 0;
+    const phonesWithAbsoluteQP = allPhonesProcessed.map(phone => {
+        // Se suma 1 para evitar división por cero en móviles gratuitos (si los hubiera)
+        const absoluteQP = phone.totalQuality / (phone.price + 1);
+        if (absoluteQP > maxAbsoluteValue) {
+            maxAbsoluteValue = absoluteQP;
+        }
+        return { ...phone, absoluteQP };
+    });
+
+    // 5. Filtrar por precio
+    const filteredPhones = phonesWithAbsoluteQP.filter(phone => phone.price >= priceRange.min && phone.price <= priceRange.max);
+
     if (filteredPhones.length === 0) {
-        return null; // No se encontraron resultados
+        return null;
     }
 
+    // 6. Calcular la puntuación final para los móviles filtrados
     const scoredPhones = filteredPhones.map(phone => {
+        // a) Puntuación de precio relativa al rango (0-1)
         const PRACTICAL_MAX_PRICE = 2000;
         const rangeMin = priceRange.min;
         const rangeMax = priceRange.max === Infinity ? PRACTICAL_MAX_PRICE : priceRange.max;
-        const priceScore = (rangeMax - rangeMin > 0) ? Math.max(0, 1 - ((phone.price - rangeMin) / (rangeMax - rangeMin))) : 1;
-        //const absoluteQualityPriceScore = Math.min(10, allPhonesProcessed.totalQuality / priceScore);
-        const finalScore = ((phone.qualityScore * 0.6) + (priceScore * 0.4)) * 10;
+        const priceInRangeScore = (rangeMax - rangeMin > 0) ? Math.max(0, 1 - ((phone.price - rangeMin) / (rangeMax - rangeMin))) : 1;
+
+        // b) Calidad-precio absoluta (normalizada a 0-1)
+        const absoluteQPScore = maxAbsoluteValue > 0 ? (phone.absoluteQP / maxAbsoluteValue) : 0;
+
+        // c) Puntuación final combinada (ponderada) y escalada a 10
+        const finalScore = (
+            (phone.useCaseQualityScore * 0.60) + // 60% peso a la calidad para el uso
+            (absoluteQPScore * 0.25) +           // 25% peso a si es una "ganga" en general
+            (priceInRangeScore * 0.15)           // 15% peso a lo barato que es dentro del presupuesto
+        ) * 10;
+
         return { ...phone, finalScore };
     });
 
-    // 5. Ordenar y devolver el mejor resultado
+    // 7. Ordenar y devolver el mejor resultado
     scoredPhones.sort((a, b) => b.finalScore - a.finalScore);
     return scoredPhones[0];
 }
