@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "seed": "node seeder.js"
-},
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cuadradodev42/PhoneMatch.git"
@@ -21,6 +21,7 @@
   "homepage": "https://github.com/cuadradodev42/PhoneMatch#readme",
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "pg": "^8.16.3"
   }

@@ -1,21 +1,23 @@
 // seeder.js
 // Este script lee los datos de smartphones.js y los inserta de forma inteligente
-// en la base de datos relacional de PostgreSQL, adaptado para Render.
+// en la base de datos relacional de PostgreSQL.
+// Adaptado para ejecutarse localmente y conectarse a una base de datos remota (Render).
 
+require('dotenv').config(); // Carga las variables de entorno del archivo .env
 const { Pool } = require('pg');
 const smartphones = require('./smartphones.js'); // Importamos los datos locales
 
-// --- CONFIGURACIÓN DE LA BASE DE DATOS PARA RENDER ---
+// --- CONFIGURACIÓN DE LA BASE DE DATOS ---
 
 // Comprobamos si la variable de entorno DATABASE_URL existe.
 if (!process.env.DATABASE_URL) {
     console.error('❌ Error: La variable de entorno DATABASE_URL no está definida.');
-    console.error('Asegúrate de que estás ejecutando este script en un entorno donde esta variable esté configurada (como la shell de Render).');
+    console.error('Asegúrate de haber creado un archivo .env con la URL de conexión de tu base de datos de Render.');
     process.exit(1); // Detiene la ejecución si no hay URL de conexión.
 }
 
 const pool = new Pool({
-    // Lee la URL de conexión directamente de las variables de entorno de Render.
+    // Lee la URL de conexión directamente de las variables de entorno.
     connectionString: process.env.DATABASE_URL,
     // Render requiere una conexión SSL.
     ssl: {
@@ -48,7 +50,7 @@ async function getOrInsert(client, tableName, data, uniqueColumns) {
 async function seedDatabase() {
     const client = await pool.connect();
     try {
-        console.log('✅ Conexión a la base de datos de Render establecida.');
+        console.log('✅ Conexión a la base de datos remota de Render establecida.');
 
         await client.query('BEGIN');
 
@@ -64,7 +66,7 @@ async function seedDatabase() {
             
             const screenId = await getOrInsert(client, 'screens', { size: d.screen.size, resolution: d.screen.resolution, refresh_rate: d.screen.refresh_rate, brightness: d.screen.brightness, color_score: d.screen.color, is_oled: d.screen.oled, has_hdr: d.screen.hdr }, ['resolution', 'size']);
 
-            const batteryId = await getOrInsert(client, 'batteries', { capacity: d.battery.capacity, fast_charge: d.battery.fast_charge, energy_consumption: d.battery.energy_concumption || d.battery.energy_consumption, has_wireless_charge: d.battery.wireless_charge }, ['capacity', 'fast_charge']);
+            const batteryId = await getOrInsert(client, 'batteries', { capacity: d.battery.capacity, fast_charge: d.battery.fast_charge, energy_consumption: d.battery.energy_consumption || 0, has_wireless_charge: d.battery.wireless_charge }, ['capacity', 'fast_charge']);
             
             const designId = await getOrInsert(client, 'designs', { material_score: d.design.material_score, water_resistance: d.design.water_resistance, dust_resistance: d.design.dust_resistance, drop_resistance: d.design.drop_resistance }, ['material_score', 'water_resistance']);
 
@@ -86,16 +88,11 @@ async function seedDatabase() {
                 }
             }
 
-            // 4. --- NUEVO: Insertar los enlaces de compra ---
+            // 4. Insertar los enlaces de compra
             if (phone.purchase_links) {
                 for (const storeName in phone.purchase_links) {
                     const url = phone.purchase_links[storeName];
-                    const linkData = {
-                        smartphone_id: smartphoneId,
-                        store_name: storeName,
-                        url: url
-                    };
-                    // Insertamos el enlace, si ya existe no hacemos nada gracias a ON CONFLICT
+                    const linkData = { smartphone_id: smartphoneId, store_name: storeName, url: url };
                     await client.query('INSERT INTO purchase_links (smartphone_id, store_name, url) VALUES ($1, $2, $3) ON CONFLICT (smartphone_id, store_name) DO NOTHING', [linkData.smartphone_id, linkData.store_name, linkData.url]);
                 }
             }
