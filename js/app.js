@@ -1,5 +1,3 @@
-// --- LÓGICA DE LA INTERFAZ DE USUARIO (UI) ---
-
 // Variable global para el idioma actual
 let currentLang = 'es';
 
@@ -11,19 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const recommendBtn = document.getElementById('recommend-btn');
 
     // Función inicial para construir la interfaz de usuario
-    async function initializeApp() {
-        try 
-        {
-            const response = await fetch('https://phonematch.onrender.com/api/smartphones');
-            if (!response.ok){
-                throw new Error('Error del servidor: ${response.statusText}');
-            }
-            smartphones = await response.json();
-        }catch (error) {
-            console.error("no se pudo cargar la lista de móviles:", error);
-            alert("Error: No se pudo conectar con el servidor. Asegúrate de que el servidor (server.js) está en ejecución.");
-            return; // Detiene la ejecución si no hay datos
-        }
+    function initializeApp() {
         populateUI();
         addEventListeners();
         setLanguage('es'); // Establecer idioma inicial
@@ -88,7 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedPriceId = document.querySelector('.price-card.selected').dataset.priceId;
 
         // 2. Llamar al motor de recomendación con todos los datos necesarios
-        // (asume que calculateRecommendation está disponible globalmente desde engine.js)
         const bestPhone = calculateRecommendation(selectedUseKeys, selectedPriceId, smartphones, useCases, priceRanges);
 
         // 3. Mostrar el resultado que nos ha devuelto el motor
@@ -132,25 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p class="text-gray-400 mb-6" data-translate-key="result_reason_text">${translations[currentLang]['result_reason_text'].replace('{phoneName}', phone.name)}</p>
                     <h4 class="text-xl font-semibold mb-2" data-translate-key="scores_title">${translations[currentLang]['scores_title']}</h4>
                     <div class="bg-gray-800/60 p-4 rounded-lg">${scoresHTML}</div>
-                </div>              
-            </div>
-            ${buttonsHTML}`;
-            // --- Pega este bloque DENTRO de la función displayResult ---
-
-    let buttonsHTML = '';
-    if (phone.purchase_links) {
-        buttonsHTML += `<div class="mt-6 pt-6 border-t border-gray-700/50 text-center">
-            <h4 class="text-lg font-semibold mb-4" data-translate--key="buy_button">${translations[currentLang]['buy_button']} </h4>
-            <div class="flex justify-center items-center gap-4">`;
-
-        for (const storeName in phone.purchase_links) {
-            const url = phone.purchase_links[storeName];
-            buttonsHTML += `<a href="${url}" target="_blank" rel="noopener noreferrer" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded-lg transition-transform duration-200 hover:scale-105">
-                ${storeName} </a>`;
-        }
-
-    buttonsHTML += `</div></div>`;
-    }
+                </div>
+            </div>`;
         resultsSection.classList.remove('hidden');
         resultsSection.scrollIntoView({ behavior: 'smooth' });
     }
