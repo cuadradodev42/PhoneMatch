@@ -32,7 +32,8 @@ const translations = {
         connectivity: "Connectivity",
         design: "Design",
         battery: "Battery",
-        extras: "Extras"
+        extras: "Extras",
+        buy_button: "Buy now"
     },
     es: {
         app_title: "PhoneMatch",
@@ -67,6 +68,7 @@ const translations = {
         connectivity: "Conectividad",
         design: "Diseño",
         battery: "Batería",
-        extras: "Extras"
+        extras: "Extras",
+        buy_button: "Comprar ahora"
     }
 };
