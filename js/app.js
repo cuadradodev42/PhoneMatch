@@ -1,3 +1,5 @@
+// --- LÓGICA DE LA INTERFAZ DE USUARIO (UI) ---
+
 // Variable global para el idioma actual
 let currentLang = 'es';
 
