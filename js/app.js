@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function initializeApp() {
         try 
         {
-            const response = await fetch('https://phonematch.onrender.com');
+            const response = await fetch('postgresql://phonematchdb_user:9J6jCKbVMExnNj40tnKQoKh0b00DLRcl@dpg-d2j12a6mcj7s73egltkg-a.frankfurt-postgres.render.com/phonematchdb');
             if (!response.ok){
                 throw new Error('Error del servidor: ${response.statusText}');
             }
