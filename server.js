@@ -5,7 +5,7 @@ const { Pool } = require('pg');
 const cors = require('cors');
 
 const app = express();
-const port = process.env.PORT || 3000; // Render asigna el puerto automáticamente
+const port = process.env.PORT || 10000; // Render asigna el puerto automáticamente
 
 app.use(cors());
 
