@@ -89,14 +89,18 @@ function getDetailValue(phone, key) {
 function calculateRecommendation(selectedUseKeys, selectedPriceId, allSmartphones, allUseCases, allPriceRanges) {
     const priceRange = allPriceRanges.find(p => p.id === selectedPriceId);
 
-    // 1. Construir el "Mapa de Requisitos Maestro"
+    // 1. Construir el "Mapa de Requisitos Maestro" y los parámetros de razonamiento
     const masterWeights = {};
+    const reasoningParams = new Set();
     selectedUseKeys.forEach(useKey => {
-        const currentWeights = allUseCases[useKey].weights;
-        for (const param in currentWeights) {
-            if (!masterWeights[param] || currentWeights[param] > masterWeights[param]) {
-                masterWeights[param] = currentWeights[param];
+        const currentUseCase = allUseCases[useKey];
+        for (const param in currentUseCase.weights) {
+            if (!masterWeights[param] || currentUseCase.weights[param] > masterWeights[param]) {
+                masterWeights[param] = currentUseCase.weights[param];
             }
+        }
+        if (currentUseCase.reasoningParams) {
+            currentUseCase.reasoningParams.forEach(p => reasoningParams.add(p));
         }
     });
 
@@ -112,14 +116,12 @@ function calculateRecommendation(selectedUseKeys, selectedPriceId, allSmartphone
             return { ...phone, useCaseQualityScore: 0, totalQuality: 0, scores: {} };
         }
 
-        // a) Calidad específica para el uso seleccionado
         let rawUseCaseScore = 0;
         for (const param in masterWeights) {
             rawUseCaseScore += getDetailValue(phone, param) * masterWeights[param];
         }
-        const useCaseQualityScore = maxPossibleScore > 0 ? (rawUseCaseScore / maxPossibleScore) : 0; // Normalizada 0-1
+        const useCaseQualityScore = maxPossibleScore > 0 ? (rawUseCaseScore / maxPossibleScore) : 0;
 
-        // b) Puntuaciones para mostrar en la UI
         const displayScores = {
             performance: (getDetailValue(phone, 'cpu') + getDetailValue(phone, 'gpu')) / 2,
             battery: getDetailValue(phone, 'capacity'),
@@ -129,7 +131,6 @@ function calculateRecommendation(selectedUseKeys, selectedPriceId, allSmartphone
             camera_video: getDetailValue(phone, 'video_score'),
         };
 
-        // c) Calidad total (independiente del uso) para el cálculo de QP absoluta
         const scoreValues = Object.values(displayScores);
         const totalQuality = scoreValues.length > 0 ? scoreValues.reduce((sum, val) => sum + val, 0) / scoreValues.length : 0;
 
@@ -170,5 +171,11 @@ function calculateRecommendation(selectedUseKeys, selectedPriceId, allSmartphone
 
     // 7. Ordenar y devolver el mejor resultado
     scoredPhones.sort((a, b) => b.finalScore - a.finalScore);
-    return scoredPhones[0];
+    const bestPhone = scoredPhones[0];
+    
+    if (bestPhone) {
+        bestPhone.reasoningPoints = Array.from(reasoningParams);
+    }
+    
+    return bestPhone;
 }
