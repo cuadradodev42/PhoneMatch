@@ -1,22 +1,34 @@
 // --- LÓGICA DE LA INTERFAZ DE USUARIO (UI) ---
 
-// Variable global para el idioma actual
 let currentLang = 'es';
+let smartphones = []; // Esta se llenará con los datos del servidor
 
-// El evento DOMContentLoaded se asegura de que todo el HTML esté cargado antes de ejecutar el script.
-document.addEventListener('DOMContentLoaded', () => {
-    // Referencias a los elementos del DOM
+// El evento DOMContentLoaded se asegura de que todo el HTML esté cargado
+document.addEventListener('DOMContentLoaded', initializeApp);
+
+async function initializeApp() {
+    // --- 1. OBTENER DATOS DEL SERVIDOR ---
+    try {
+        const response = await fetch('https://phonematch-backend.onrender.com/api/smartphones'); // Reemplaza con tu URL de Render
+        if (!response.ok) {
+            throw new Error(`Error del servidor: ${response.statusText}`);
+        }
+        smartphones = await response.json();
+    } catch (error) {
+        console.error("No se pudo cargar la lista de móviles:", error);
+        alert("Error: No se pudo conectar con el servidor. Asegúrate de que el servidor está en ejecución y la URL es correcta.");
+        return;
+    }
+
+    // --- 2. CONSTRUIR LA UI ---
     const useCaseContainer = document.getElementById('use-case-container');
     const priceRangeContainer = document.getElementById('price-range-container');
     const recommendBtn = document.getElementById('recommend-btn');
 
-    // Función inicial para construir la interfaz de usuario
-    function initializeApp() {
-        populateUI();
-        addEventListeners();
-        setLanguage('es'); // Establecer idioma inicial
-    }
-
+    populateUI();
+    addEventListeners();
+    setLanguage('es');
+    
     function populateUI() {
         useCaseContainer.innerHTML = '';
         for (const key in useCases) {
@@ -68,17 +80,11 @@ document.addEventListener('DOMContentLoaded', () => {
         recommendBtn.addEventListener('click', runRecommendation);
     }
 
-    // --- FUNCIÓN INTERMEDIARIA ---
-    // Esta función ahora solo recoge los datos y llama al motor.
     function runRecommendation() {
-        // 1. Recoger selecciones del usuario desde el HTML
         const selectedUseKeys = Array.from(document.querySelectorAll('.use-card.selected')).map(c => c.dataset.use);
         const selectedPriceId = document.querySelector('.price-card.selected').dataset.priceId;
-
-        // 2. Llamar al motor de recomendación con todos los datos necesarios
         const bestPhone = calculateRecommendation(selectedUseKeys, selectedPriceId, smartphones, useCases, priceRanges);
 
-        // 3. Mostrar el resultado que nos ha devuelto el motor
         if (bestPhone) {
             displayResult(bestPhone);
         } else {
@@ -88,6 +94,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function displayResult(phone) {
         const resultsSection = document.getElementById('results-section');
+        
+        // --- LÓGICA PARA CREAR LOS BOTONES DE COMPRA ---
+        let buttonsHTML = '';
+        if (phone.purchase_links && Object.keys(phone.purchase_links).length > 0) {
+            buttonsHTML = `
+                <div class="mt-6 pt-6 border-t border-gray-700/50 text-center">
+                    <h4 class="text-lg font-semibold mb-4">Comprar ahora:</h4>
+                    <div class="flex justify-center items-center gap-4 flex-wrap">
+                        ${Object.entries(phone.purchase_links).map(([storeName, url]) => `
+                            <a href="${url}" target="_blank" rel="noopener noreferrer" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded-lg transition-transform duration-200 hover:scale-105">
+                                ${storeName}
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>`;
+        }
+        // --- FIN DE LA LÓGICA DE BOTONES ---
+
         const scoresHTML = Object.entries(phone.scores).map(([key, value]) => {
             if (!value || value <= 0) return '';
             return `
@@ -120,7 +144,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h4 class="text-xl font-semibold mb-2" data-translate-key="scores_title">${translations[currentLang]['scores_title']}</h4>
                     <div class="bg-gray-800/60 p-4 rounded-lg">${scoresHTML}</div>
                 </div>
-            </div>`;
+            </div>
+            ${buttonsHTML}`; // <-- SE AÑADEN LOS BOTONES AQUÍ
         resultsSection.classList.remove('hidden');
         resultsSection.scrollIntoView({ behavior: 'smooth' });
     }
@@ -135,10 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsSection.classList.remove('hidden');
         resultsSection.scrollIntoView({ behavior: 'smooth' });
     }
-
-    // Iniciar la aplicación
-    initializeApp();
-});
+}
 
 // Función global para cambiar el idioma
 window.setLanguage = function(lang) {
