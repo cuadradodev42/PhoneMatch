@@ -7,20 +7,13 @@ let smartphones = []; // Esta se llenará con los datos del servidor
 document.addEventListener('DOMContentLoaded', initializeApp);
 
 async function initializeApp() {
-    // --- 1. OBTENER DATOS DEL SERVIDOR ---
-    try {
-        const response = await fetch('https://phonematch-backend.onrender.com/api/smartphones'); // Reemplaza con tu URL de Render
-        if (!response.ok) {
-            throw new Error(`Error del servidor: ${response.statusText}`);
-        }
-        smartphones = await response.json();
-    } catch (error) {
-        console.error("No se pudo cargar la lista de móviles:", error);
-        alert("Error: No se pudo conectar con el servidor. Asegúrate de que el servidor está en ejecución y la URL es correcta.");
-        return;
+    // Si estás usando un backend, aquí iría la lógica del fetch.
+    // Para la versión local, los datos ya están cargados desde los scripts.
+    if (typeof window.smartphones !== 'undefined') {
+        smartphones = window.smartphones;
     }
 
-    // --- 2. CONSTRUIR LA UI ---
+    // --- CONSTRUIR LA UI ---
     const useCaseContainer = document.getElementById('use-case-container');
     const priceRangeContainer = document.getElementById('price-range-container');
     const recommendBtn = document.getElementById('recommend-btn');

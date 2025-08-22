@@ -66,6 +66,11 @@ function getDetailValue(phone, key) {
         'color': d.screen, 'size': d.screen, 'brightness': d.screen, 'oled': d.screen, 'refresh_rate': d.screen, 'hdr': d.screen, 'resolution': d.screen, 'protection': d.screen,
     };
 
+    // Parche para la errata "energy_concumption" en los datos
+    if (key === 'energy_consumption' && d.battery && d.battery.energy_concumption) {
+        return normalizeValue(key, d.battery.energy_concumption);
+    }
+
     let rawValue;
     if (key.startsWith('software_')) {
         const softwareProperty = key.replace('software_', '');
@@ -134,7 +139,6 @@ function calculateRecommendation(selectedUseKeys, selectedPriceId, allSmartphone
     // 4. Calcular la calidad-precio absoluta para TODOS los móviles
     let maxAbsoluteValue = 0;
     const phonesWithAbsoluteQP = allPhonesProcessed.map(phone => {
-        // Se suma 1 para evitar división por cero en móviles gratuitos (si los hubiera)
         const absoluteQP = phone.totalQuality / (phone.price + 1);
         if (absoluteQP > maxAbsoluteValue) {
             maxAbsoluteValue = absoluteQP;
@@ -151,22 +155,16 @@ function calculateRecommendation(selectedUseKeys, selectedPriceId, allSmartphone
 
     // 6. Calcular la puntuación final para los móviles filtrados
     const scoredPhones = filteredPhones.map(phone => {
-        // a) Puntuación de precio relativa al rango (0-1)
         const PRACTICAL_MAX_PRICE = 2000;
         const rangeMin = priceRange.min;
         const rangeMax = priceRange.max === Infinity ? PRACTICAL_MAX_PRICE : priceRange.max;
         const priceInRangeScore = (rangeMax - rangeMin > 0) ? Math.max(0, 1 - ((phone.price - rangeMin) / (rangeMax - rangeMin))) : 1;
-
-        // b) Calidad-precio absoluta (normalizada a 0-1)
         const absoluteQPScore = maxAbsoluteValue > 0 ? (phone.absoluteQP / maxAbsoluteValue) : 0;
-
-        // c) Puntuación final combinada (ponderada) y escalada a 10
         const finalScore = (
-            (phone.useCaseQualityScore * 0.60) + // 60% peso a la calidad para el uso
-            (absoluteQPScore * 0.25) +           // 25% peso a si es una "ganga" en general
-            (priceInRangeScore * 0.15)           // 15% peso a lo barato que es dentro del presupuesto
+            (phone.useCaseQualityScore * 0.60) +
+            (absoluteQPScore * 0.25) +
+            (priceInRangeScore * 0.15)
         ) * 10;
-
         return { ...phone, finalScore };
     });
 
