@@ -1,17 +1,44 @@
 // --- LÓGICA DE LA INTERFAZ DE USUARIO (UI) ---
 
 let currentLang = 'es';
-let smartphones = [];
-let lastRecommendation = null; // Variable para guardar la última recomendación
+let smartphones = []; // Esta se llenará con los datos del servidor
+let lastRecommendation = null;
 
+// El evento DOMContentLoaded se asegura de que todo el HTML esté cargado antes de ejecutar el script.
 document.addEventListener('DOMContentLoaded', initializeApp);
 
+/**
+ * Función principal que se ejecuta al cargar la página.
+ * Primero obtiene los datos del servidor y luego construye la interfaz.
+ */
 async function initializeApp() {
-    // Para la versión local, los datos ya están cargados desde los scripts.
-    if (typeof window.smartphones !== 'undefined') {
-        smartphones = window.smartphones;
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const loadingText = document.getElementById('loading-text');
+    const appContainer = document.getElementById('app-container');
+
+    // --- 1. OBTENER DATOS DEL SERVIDOR ---
+    try {
+        // Reemplaza esta URL con la URL de tu backend en Render
+        const backendUrl = 'https://phonemath-backend.onrender.com/api/smartphones';
+        
+        const response = await fetch(backendUrl);
+        if (!response.ok) {
+            throw new Error(`Error del servidor: ${response.status} ${response.statusText}`);
+        }
+        smartphones = await response.json();
+
+        // Ocultar el indicador de carga y mostrar la app
+        loadingIndicator.style.display = 'none';
+        appContainer.classList.remove('opacity-0');
+
+    } catch (error) {
+        console.error("No se pudo cargar la lista de móviles:", error);
+        loadingText.textContent = "Error al conectar con el servidor. Revisa la consola (F12).";
+        loadingText.classList.add('text-red-500');
+        return; // Detiene la ejecución si no hay datos
     }
 
+    // --- 2. CONSTRUIR LA UI (SOLO DESPUÉS DE OBTENER LOS DATOS) ---
     const useCaseContainer = document.getElementById('use-case-container');
     const priceRangeContainer = document.getElementById('price-range-container');
     const recommendBtn = document.getElementById('recommend-btn');
@@ -72,10 +99,7 @@ async function initializeApp() {
         const selectedUseKeys = Array.from(document.querySelectorAll('.use-card.selected')).map(c => c.dataset.use);
         const selectedPriceId = document.querySelector('.price-card.selected').dataset.priceId;
         const bestPhone = calculateRecommendation(selectedUseKeys, selectedPriceId, smartphones, useCases, priceRanges);
-
-        // Guardamos la recomendación para poder retraducirla
         lastRecommendation = { phone: bestPhone, uses: selectedUseKeys };
-
         if (bestPhone) {
             displayResult(bestPhone, selectedUseKeys);
         } else {
@@ -86,22 +110,18 @@ async function initializeApp() {
     function generateReasoningText(phone, selectedUseKeys) {
         const lang = currentLang;
         const useNames = selectedUseKeys.map(key => translations[lang][key] || key).join(', ');
-        
         let intro = translations[lang].reason_intro
             .replace('{uses}', `<strong>${useNames}</strong>`)
             .replace('{phoneName}', `<strong>${phone.name}</strong>`);
-
         const reasonsList = phone.reasoningPoints
             .filter(param => translations[lang].reasons[param])
             .map(param => `<li>- ${translations[lang].reasons[param]}</li>`)
             .join('');
-
         return `${intro}<ul class="list-disc list-inside mt-2 space-y-1">${reasonsList}</ul>`;
     }
 
     function displayResult(phone, selectedUseKeys) {
         const resultsSection = document.getElementById('results-section');
-        
         let buttonsHTML = '';
         if (phone.purchase_links && Object.keys(phone.purchase_links).length > 0) {
             buttonsHTML = `
@@ -116,7 +136,6 @@ async function initializeApp() {
                     </div>
                 </div>`;
         }
-
         const scoresHTML = Object.entries(phone.scores).map(([key, value]) => {
             if (!value || value <= 0) return '';
             return `
@@ -128,9 +147,7 @@ async function initializeApp() {
                 </div>
             </div>`;
         }).join('');
-
         const reasoningText = generateReasoningText(phone, selectedUseKeys);
-
         resultsSection.innerHTML = `
             <h2 class="text-3xl font-bold text-center mb-6" data-translate-key="result_title">${translations[currentLang]['result_title']}</h2>
             <div class="flex flex-col md:flex-row gap-8 items-start">
@@ -158,7 +175,7 @@ async function initializeApp() {
     }
 
     function displayNoResults() {
-        lastRecommendation = null; // Limpiamos la última recomendación
+        lastRecommendation = null;
         const resultsSection = document.getElementById('results-section');
         resultsSection.innerHTML = `
             <div class="text-center py-8">
@@ -190,13 +207,11 @@ window.setLanguage = function(lang) {
         }
     });
 
-    // Volver a mostrar el resultado si ya hay uno visible para traducir el texto dinámico
     const resultsSection = document.getElementById('results-section');
     if (!resultsSection.classList.contains('hidden') && lastRecommendation && lastRecommendation.phone) {
-        // Re-llamamos a displayResult con los datos guardados
-        const displayResultFunc = document.querySelector('#results-section').__displayResult;
-        if (displayResultFunc) {
-             displayResultFunc(lastRecommendation.phone, lastRecommendation.uses);
-        }
+        // Esta es una forma simplificada de volver a renderizar.
+        // Una solución más avanzada usaría un framework para gestionar el estado.
+        const recommendBtn = document.getElementById('recommend-btn');
+        if(recommendBtn) recommendBtn.click(); // Simula un clic para volver a calcular y mostrar
     }
 }
