@@ -1,13 +1,13 @@
 // --- LÓGICA DE LA INTERFAZ DE USUARIO (UI) ---
 
 let currentLang = 'es';
-let smartphones = []; // Esta se llenará con los datos del servidor
+let smartphones = [];
+let lastRecommendation = null; // Variable para guardar la última recomendación
 
-// El evento DOMContentLoaded se asegura de que todo el HTML esté cargado
 document.addEventListener('DOMContentLoaded', initializeApp);
 
 async function initializeApp() {
-    // Si estás usando un backend, aquí iría la lógica del fetch.
+    // Para la versión local, los datos ya están cargados desde los scripts.
     if (typeof window.smartphones !== 'undefined') {
         smartphones = window.smartphones;
     }
@@ -73,24 +73,26 @@ async function initializeApp() {
         const selectedPriceId = document.querySelector('.price-card.selected').dataset.priceId;
         const bestPhone = calculateRecommendation(selectedUseKeys, selectedPriceId, smartphones, useCases, priceRanges);
 
+        // Guardamos la recomendación para poder retraducirla
+        lastRecommendation = { phone: bestPhone, uses: selectedUseKeys };
+
         if (bestPhone) {
-            displayResult(bestPhone, selectedUseKeys); // Pasamos los usos seleccionados
+            displayResult(bestPhone, selectedUseKeys);
         } else {
             displayNoResults();
         }
     }
 
-    // --- NUEVA FUNCIÓN PARA GENERAR EL TEXTO EXPLICATIVO ---
     function generateReasoningText(phone, selectedUseKeys) {
         const lang = currentLang;
         const useNames = selectedUseKeys.map(key => translations[lang][key] || key).join(', ');
         
         let intro = translations[lang].reason_intro
-            .replace('{uses}', useNames)
-            .replace('{phoneName}', phone.name);
+            .replace('{uses}', `<strong>${useNames}</strong>`)
+            .replace('{phoneName}', `<strong>${phone.name}</strong>`);
 
         const reasonsList = phone.reasoningPoints
-            .filter(param => translations[lang].reasons[param]) // Asegurarse de que la razón existe
+            .filter(param => translations[lang].reasons[param])
             .map(param => `<li>- ${translations[lang].reasons[param]}</li>`)
             .join('');
 
@@ -127,7 +129,6 @@ async function initializeApp() {
             </div>`;
         }).join('');
 
-        // --- NUEVO: Llamar a la función que genera el texto ---
         const reasoningText = generateReasoningText(phone, selectedUseKeys);
 
         resultsSection.innerHTML = `
@@ -146,7 +147,7 @@ async function initializeApp() {
                 </div>
                 <div class="md:w-2/3">
                     <h4 class="text-xl font-semibold mb-2" data-translate-key="result_reason">${translations[currentLang]['result_reason']}</h4>
-                    <p class="text-gray-400 mb-6 bg-gray-800/50 p-4 rounded-lg">${reasoningText}</p>
+                    <div class="text-gray-300 mb-6 bg-gray-800/50 p-4 rounded-lg text-left">${reasoningText}</div>
                     <h4 class="text-xl font-semibold mb-2" data-translate-key="scores_title">${translations[currentLang]['scores_title']}</h4>
                     <div class="bg-gray-800/60 p-4 rounded-lg">${scoresHTML}</div>
                 </div>
@@ -157,6 +158,7 @@ async function initializeApp() {
     }
 
     function displayNoResults() {
+        lastRecommendation = null; // Limpiamos la última recomendación
         const resultsSection = document.getElementById('results-section');
         resultsSection.innerHTML = `
             <div class="text-center py-8">
@@ -172,15 +174,29 @@ async function initializeApp() {
 window.setLanguage = function(lang) {
     currentLang = lang;
     document.documentElement.lang = lang;
+
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.remove('border-blue-500', 'text-blue-400');
+        btn.classList.add('border-transparent', 'text-gray-500');
+    });
+    const activeBtn = document.querySelector(`.lang-btn.${lang}`);
+    activeBtn.classList.add('border-blue-500', 'text-blue-400');
+    activeBtn.classList.remove('border-transparent', 'text-gray-500');
+
     document.querySelectorAll('[data-translate-key]').forEach(el => {
         const key = el.dataset.translateKey;
         if (translations[lang] && translations[lang][key]) {
             el.textContent = translations[lang][key];
         }
     });
+
     // Volver a mostrar el resultado si ya hay uno visible para traducir el texto dinámico
     const resultsSection = document.getElementById('results-section');
-    if (!resultsSection.classList.contains('hidden') && window.lastRecommendation) {
-        displayResult(window.lastRecommendation.phone, window.lastRecommendation.uses);
+    if (!resultsSection.classList.contains('hidden') && lastRecommendation && lastRecommendation.phone) {
+        // Re-llamamos a displayResult con los datos guardados
+        const displayResultFunc = document.querySelector('#results-section').__displayResult;
+        if (displayResultFunc) {
+             displayResultFunc(lastRecommendation.phone, lastRecommendation.uses);
+        }
     }
 }

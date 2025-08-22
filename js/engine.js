@@ -1,6 +1,5 @@
 // --- MOTOR DE RECOMENDACIÓN DE PHONEMATH ---
 
-// ... (las funciones normalizeValue y getDetailValue no cambian) ...
 function normalizeValue(key, value) {
     if (typeof value === 'boolean') return value ? 10 : 0;
     if (typeof value !== 'number') return 0;
@@ -15,6 +14,7 @@ function normalizeValue(key, value) {
         default: return Math.min(10, Math.max(0, value));
     }
 }
+
 function getDetailValue(phone, key) {
     if (!phone.details) return 0;
     const d = phone.details;
@@ -45,7 +45,6 @@ function calculateRecommendation(selectedUseKeys, selectedPriceId, allSmartphone
     const priceRange = allPriceRanges.find(p => p.id === selectedPriceId);
 
     const masterWeights = {};
-    // --- NUEVO: Guardar los parámetros de razonamiento ---
     const reasoningParams = new Set();
     selectedUseKeys.forEach(useKey => {
         const currentUseCase = allUseCases[useKey];
@@ -54,7 +53,6 @@ function calculateRecommendation(selectedUseKeys, selectedPriceId, allSmartphone
                 masterWeights[param] = currentUseCase.weights[param];
             }
         }
-        // Añadimos los parámetros de razonamiento de este uso a un Set para evitar duplicados
         currentUseCase.reasoningParams.forEach(p => reasoningParams.add(p));
     });
 
@@ -112,8 +110,9 @@ function calculateRecommendation(selectedUseKeys, selectedPriceId, allSmartphone
     scoredPhones.sort((a, b) => b.finalScore - a.finalScore);
     
     const bestPhone = scoredPhones[0];
-    // --- NUEVO: Añadimos los puntos de razonamiento al resultado final ---
-    bestPhone.reasoningPoints = Array.from(reasoningParams);
+    if (bestPhone) {
+        bestPhone.reasoningPoints = Array.from(reasoningParams);
+    }
     
     return bestPhone;
 }

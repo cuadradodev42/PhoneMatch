@@ -34,8 +34,8 @@ const translations = {
             cpu: "its powerful processor ensures a fluid experience in demanding applications.",
             gpu: "its high-performance GPU is ideal for running graphically intensive games.",
             ram: "its ample RAM allows for smooth multitasking between several apps.",
-            screen_brightness: "its screen is bright enough to be used comfortably outdoors.",
-            screen_oled: "its OLED screen offers vibrant colors and pure blacks, perfect for multimedia content.",
+            brightness: "its screen is bright enough to be used comfortably outdoors.",
+            oled: "its OLED screen offers vibrant colors and pure blacks, perfect for multimedia content.",
             capacity: "it has a large battery capacity, ensuring you'll last the whole day.",
             fast_charge: "its fast charging allows you to recover hours of use in just a few minutes.",
             photo_score: "it stands out for its excellent main camera, perfect for capturing high-quality photos.",
@@ -43,7 +43,10 @@ const translations = {
             ois: "its optical image stabilization (OIS) helps you get sharp photos and stable videos, even on the move.",
             video_score: "it excels in video recording, offering great quality and stabilization.",
             water_resistance: "its high resistance to water makes it ideal for adventures or accidents.",
-            drop_resistance: "it is built with durable materials, giving it extra protection against drops."
+            drop_resistance: "it is built with durable materials, giving it extra protection against drops.",
+            precision_gps: "its precise GPS is reliable for navigation during your travels.",
+            software_efficiency: "its optimized software ensures a smooth and efficient user experience.",
+            software_compatibility: "it offers excellent compatibility with business applications and services."
         }
     },
     es: {
@@ -81,8 +84,8 @@ const translations = {
             cpu: "su potente procesador asegura una experiencia fluida en aplicaciones exigentes.",
             gpu: "su GPU de alto rendimiento es ideal para ejecutar juegos con gráficos intensivos.",
             ram: "su amplia memoria RAM permite una multitarea fluida entre varias aplicaciones.",
-            screen_brightness: "su pantalla es lo suficientemente brillante como para usarla cómodamente en exteriores.",
-            screen_oled: "su pantalla OLED ofrece colores vibrantes y negros puros, perfecta para contenido multimedia.",
+            brightness: "su pantalla es lo suficientemente brillante como para usarla cómodamente en exteriores.",
+            oled: "su pantalla OLED ofrece colores vibrantes y negros puros, perfecta para contenido multimedia.",
             capacity: "tiene una gran capacidad de batería, asegurando que llegarás al final del día.",
             fast_charge: "su carga rápida te permite recuperar horas de uso en pocos minutos.",
             photo_score: "destaca por su excelente cámara principal, perfecta para capturar fotos de alta calidad.",
@@ -90,7 +93,10 @@ const translations = {
             ois: "su estabilización óptica de imagen (OIS) te ayuda a conseguir fotos nítidas y vídeos estables, incluso en movimiento.",
             video_score: "sobresale en la grabación de vídeo, ofreciendo una gran calidad y estabilización.",
             water_resistance: "su alta resistencia al agua lo hace ideal para aventuras o accidentes.",
-            drop_resistance: "está construido con materiales duraderos, dándole una protección extra contra caídas."
+            drop_resistance: "está construido con materiales duraderos, dándole una protección extra contra caídas.",
+            precision_gps: "su GPS preciso es muy fiable para la navegación en tus viajes.",
+            software_efficiency: "su software optimizado garantiza una experiencia de usuario fluida y eficiente.",
+            software_compatibility: "ofrece una excelente compatibilidad con aplicaciones y servicios empresariales."
         }
     }
 };
