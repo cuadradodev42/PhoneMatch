@@ -115,7 +115,7 @@ async function initializeApp() {
             .replace('{phoneName}', `<strong>${phone.name}</strong>`);
         const reasonsList = phone.reasoningPoints
             .filter(param => translations[lang].reasons[param])
-            .map(param => `<li>- ${translations[lang].reasons[param]}</li>`)
+            .map(param => `<li>${translations[lang].reasons[param]}</li>`)
             .join('');
         return `${intro}<ul class="list-disc list-inside mt-2 space-y-1">${reasonsList}</ul>`;
     }
