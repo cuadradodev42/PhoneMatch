@@ -1,10 +1,10 @@
 const translations = {
     en: {
-        app_title: "PhoneMatch",
+        app_title: "PhoneMath",
         app_subtitle: "Find your ideal smartphone based on your use and budget.",
         step1_title: "1. Choose your main uses",
         step2_title: "2. Select your budget",
-        recommend_button: "Find My Next Phone",
+        recommend_button: "Find My Phone",
         gaming: "Gaming",
         photo: "Photography",
         video: "Video",
@@ -17,8 +17,7 @@ const translations = {
         xtreme_sport: "Xtreme Sports",
         diving: "Diving",
         result_title: "Our Recommendation For You",
-        result_reason: "Why this phone?",
-        result_reason_text: "Based on your selections, the {phoneName} represents the best balance of performance for your chosen activities and value within your budget.",
+        result_reason: "Why is this the perfect phone for you?",
         quality_price_score: "Final Score",
         no_results_title: "No Matches Found",
         no_results_text: "We couldn't find a phone in our database that matches your criteria. Please try adjusting your budget or use cases.",
@@ -28,10 +27,27 @@ const translations = {
         battery: "Battery",
         camera_photo: "Photo Camera",
         camera_video: "Video Camera",
-        design: "Design"
+        design: "Design",
+        // --- NUEVAS FRASES PARA LA EXPLICACIÓN ---
+        reason_intro: "You have selected the following uses: {uses}. Based on your selection, the {phoneName} is the perfect smartphone for you within your budget because:",
+        reasons: {
+            cpu: "its powerful processor ensures a fluid experience in demanding applications.",
+            gpu: "its high-performance GPU is ideal for running graphically intensive games.",
+            ram: "its ample RAM allows for smooth multitasking between several apps.",
+            screen_brightness: "its screen is bright enough to be used comfortably outdoors.",
+            screen_oled: "its OLED screen offers vibrant colors and pure blacks, perfect for multimedia content.",
+            capacity: "it has a large battery capacity, ensuring you'll last the whole day.",
+            fast_charge: "its fast charging allows you to recover hours of use in just a few minutes.",
+            photo_score: "it stands out for its excellent main camera, perfect for capturing high-quality photos.",
+            main_sensor: "it has a high-quality main sensor for detailed and sharp photos.",
+            ois: "its optical image stabilization (OIS) helps you get sharp photos and stable videos, even on the move.",
+            video_score: "it excels in video recording, offering great quality and stabilization.",
+            water_resistance: "its high resistance to water makes it ideal for adventures or accidents.",
+            drop_resistance: "it is built with durable materials, giving it extra protection against drops."
+        }
     },
     es: {
-        app_title: "PhoneMatch",
+        app_title: "PhoneMath",
         app_subtitle: "Encuentra tu smartphone ideal basado en tu uso y presupuesto.",
         step1_title: "1. Elige tus usos principales",
         step2_title: "2. Selecciona tu presupuesto",
@@ -48,8 +64,7 @@ const translations = {
         xtreme_sport: "Deporte Extremo",
         diving: "Buceo",
         result_title: "Nuestra recomendación para ti",
-        result_reason: "¿Por qué este móvil?",
-        result_reason_text: "Basado en tu selección, el {phoneName} representa el mejor equilibrio entre rendimiento para tus actividades y valor dentro de tu presupuesto.",
+        result_reason: "¿Por qué es el móvil perfecto para ti?",
         quality_price_score: "Puntuación Final",
         no_results_title: "No se encontraron resultados",
         no_results_text: "No hemos podido encontrar un móvil en nuestra base de datos que coincida con tus criterios. Por favor, intenta ajustar tu presupuesto o casos de uso.",
@@ -59,6 +74,23 @@ const translations = {
         battery: "Batería",
         camera_photo: "Cámara (Foto)",
         camera_video: "Cámara (Vídeo)",
-        design: "Diseño"
+        design: "Diseño",
+        // --- NUEVAS FRASES PARA LA EXPLICACIÓN ---
+        reason_intro: "Has seleccionado los siguientes usos: {uses}. Basándonos en tu selección, el {phoneName} es el smartphone perfecto para ti dentro de tu presupuesto porque:",
+        reasons: {
+            cpu: "su potente procesador asegura una experiencia fluida en aplicaciones exigentes.",
+            gpu: "su GPU de alto rendimiento es ideal para ejecutar juegos con gráficos intensivos.",
+            ram: "su amplia memoria RAM permite una multitarea fluida entre varias aplicaciones.",
+            screen_brightness: "su pantalla es lo suficientemente brillante como para usarla cómodamente en exteriores.",
+            screen_oled: "su pantalla OLED ofrece colores vibrantes y negros puros, perfecta para contenido multimedia.",
+            capacity: "tiene una gran capacidad de batería, asegurando que llegarás al final del día.",
+            fast_charge: "su carga rápida te permite recuperar horas de uso en pocos minutos.",
+            photo_score: "destaca por su excelente cámara principal, perfecta para capturar fotos de alta calidad.",
+            main_sensor: "cuenta con un sensor principal de gran calidad para fotos detalladas y nítidas.",
+            ois: "su estabilización óptica de imagen (OIS) te ayuda a conseguir fotos nítidas y vídeos estables, incluso en movimiento.",
+            video_score: "sobresale en la grabación de vídeo, ofreciendo una gran calidad y estabilización.",
+            water_resistance: "su alta resistencia al agua lo hace ideal para aventuras o accidentes.",
+            drop_resistance: "está construido con materiales duraderos, dándole una protección extra contra caídas."
+        }
     }
 };

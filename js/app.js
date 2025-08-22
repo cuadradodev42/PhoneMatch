@@ -92,6 +92,23 @@ async function initializeApp() {
         }
     }
 
+    function generateReasoningText(phone, selectedUseKeys) {
+        const lang = currentLang;
+        const useNames = selectedUseKeys.map(key => translations[lang][key] || key).join(', ');
+        
+        let intro = translations[lang].reason_intro
+            .replace('{uses}', useNames)
+            .replace('{phoneName}', phone.name);
+
+        const reasonsList = phone.reasoningPoints
+            .filter(param => translations[lang].reasons[param]) // Asegurarse de que la razón existe
+            .map(param => `<li>- ${translations[lang].reasons[param]}</li>`)
+            .join('');
+
+        return `${intro}<ul class="list-disc list-inside mt-2 space-y-1">${reasonsList}</ul>`;
+    }
+
+
     function displayResult(phone) {
         const resultsSection = document.getElementById('results-section');
         
@@ -124,6 +141,8 @@ async function initializeApp() {
             </div>`;
         }).join('');
 
+        const reasoningText = generateReasoningText(phone, selectedUseKeys);
+
         resultsSection.innerHTML = `
             <h2 class="text-3xl font-bold text-center mb-6" data-translate-key="result_title">${translations[currentLang]['result_title']}</h2>
             <div class="flex flex-col md:flex-row gap-6 items-center">
@@ -140,7 +159,7 @@ async function initializeApp() {
                 </div>
                 <div class="md:w-2/3">
                     <h4 class="text-xl font-semibold mb-2" data-translate-key="result_reason">${translations[currentLang]['result_reason']}</h4>
-                    <p class="text-gray-400 mb-6" data-translate-key="result_reason_text">${translations[currentLang]['result_reason_text'].replace('{phoneName}', phone.name)}</p>
+                    <p class="text-gray-400 mb-6" data-translate-key="result_reason_text">${reasoningText}</p>
                     <h4 class="text-xl font-semibold mb-2" data-translate-key="scores_title">${translations[currentLang]['scores_title']}</h4>
                     <div class="bg-gray-800/60 p-4 rounded-lg">${scoresHTML}</div>
                 </div>

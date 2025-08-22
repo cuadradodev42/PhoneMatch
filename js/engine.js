@@ -91,13 +91,21 @@ function calculateRecommendation(selectedUseKeys, selectedPriceId, allSmartphone
 
     // 1. Construir el "Mapa de Requisitos Maestro"
     const masterWeights = {};
+    const reasoningParams = new Set();
     selectedUseKeys.forEach(useKey => {
         const currentWeights = allUseCases[useKey].weights;
+        const currentUseCase = allUseCases[useKey];
         for (const param in currentWeights) {
             if (!masterWeights[param] || currentWeights[param] > masterWeights[param]) {
                 masterWeights[param] = currentWeights[param];
             }
         }
+        for (const param in currentUseCase.weights) {
+            if (!masterWeights[param] || currentUseCase.weights[param] > masterWeights[param]) {
+                masterWeights[param] = currentUseCase.weights[param];
+            }
+        }
+        currentUseCase.reasoningParams.forEach(p => reasoningParams.add(p));
     });
 
     // 2. Calcular la puntuación máxima teórica posible para el uso seleccionado
@@ -170,5 +178,6 @@ function calculateRecommendation(selectedUseKeys, selectedPriceId, allSmartphone
 
     // 7. Ordenar y devolver el mejor resultado
     scoredPhones.sort((a, b) => b.finalScore - a.finalScore);
+    bestPhone.reasoningPoints = Array.from(reasoningParams);
     return scoredPhones[0];
 }
