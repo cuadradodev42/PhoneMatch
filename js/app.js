@@ -1,17 +1,19 @@
 // --- LÓGICA DE LA INTERFAZ DE USUARIO (UI) ---
 
 let currentLang = 'es';
-let smartphones = [];
-let lastRecommendation = null; // Variable para guardar la última recomendación
+let smartphones = []; // Esta se llenará con los datos del servidor
 
+// El evento DOMContentLoaded se asegura de que todo el HTML esté cargado
 document.addEventListener('DOMContentLoaded', initializeApp);
 
 async function initializeApp() {
+    // Si estás usando un backend, aquí iría la lógica del fetch.
     // Para la versión local, los datos ya están cargados desde los scripts.
     if (typeof window.smartphones !== 'undefined') {
         smartphones = window.smartphones;
     }
 
+    // --- CONSTRUIR LA UI ---
     const useCaseContainer = document.getElementById('use-case-container');
     const priceRangeContainer = document.getElementById('price-range-container');
     const recommendBtn = document.getElementById('recommend-btn');
@@ -29,6 +31,7 @@ async function initializeApp() {
             card.innerHTML = `<span class="text-4xl mb-2">${useCases[key].icon}</span><span class="font-medium" data-translate-key="${key}"></span>`;
             useCaseContainer.appendChild(card);
         }
+
         priceRangeContainer.innerHTML = '';
         priceRanges.forEach(range => {
             const card = document.createElement('div');
@@ -54,6 +57,7 @@ async function initializeApp() {
                 checkButtonState();
             });
         });
+
         document.querySelectorAll('.price-card').forEach(card => {
             card.addEventListener('click', () => {
                 document.querySelectorAll('.price-card').forEach(c => {
@@ -65,6 +69,7 @@ async function initializeApp() {
                 checkButtonState();
             });
         });
+
         recommendBtn.addEventListener('click', runRecommendation);
     }
 
@@ -73,35 +78,17 @@ async function initializeApp() {
         const selectedPriceId = document.querySelector('.price-card.selected').dataset.priceId;
         const bestPhone = calculateRecommendation(selectedUseKeys, selectedPriceId, smartphones, useCases, priceRanges);
 
-        // Guardamos la recomendación para poder retraducirla
-        lastRecommendation = { phone: bestPhone, uses: selectedUseKeys };
-
         if (bestPhone) {
-            displayResult(bestPhone, selectedUseKeys);
+            displayResult(bestPhone);
         } else {
             displayNoResults();
         }
     }
 
-    function generateReasoningText(phone, selectedUseKeys) {
-        const lang = currentLang;
-        const useNames = selectedUseKeys.map(key => translations[lang][key] || key).join(', ');
-        
-        let intro = translations[lang].reason_intro
-            .replace('{uses}', `<strong>${useNames}</strong>`)
-            .replace('{phoneName}', `<strong>${phone.name}</strong>`);
-
-        const reasonsList = phone.reasoningPoints
-            .filter(param => translations[lang].reasons[param])
-            .map(param => `<li>- ${translations[lang].reasons[param]}</li>`)
-            .join('');
-
-        return `${intro}<ul class="list-disc list-inside mt-2 space-y-1">${reasonsList}</ul>`;
-    }
-
-    function displayResult(phone, selectedUseKeys) {
+    function displayResult(phone) {
         const resultsSection = document.getElementById('results-section');
         
+        // --- LÓGICA PARA CREAR LOS BOTONES DE COMPRA ---
         let buttonsHTML = '';
         if (phone.purchase_links && Object.keys(phone.purchase_links).length > 0) {
             buttonsHTML = `
@@ -116,6 +103,7 @@ async function initializeApp() {
                     </div>
                 </div>`;
         }
+        // --- FIN DE LA LÓGICA DE BOTONES ---
 
         const scoresHTML = Object.entries(phone.scores).map(([key, value]) => {
             if (!value || value <= 0) return '';
@@ -129,11 +117,9 @@ async function initializeApp() {
             </div>`;
         }).join('');
 
-        const reasoningText = generateReasoningText(phone, selectedUseKeys);
-
         resultsSection.innerHTML = `
             <h2 class="text-3xl font-bold text-center mb-6" data-translate-key="result_title">${translations[currentLang]['result_title']}</h2>
-            <div class="flex flex-col md:flex-row gap-8 items-start">
+            <div class="flex flex-col md:flex-row gap-6 items-center">
                 <div class="md:w-1/3 text-center">
                     <img src="${phone.image}" alt="${phone.name}" class="rounded-2xl mx-auto shadow-2xl mb-4">
                     <h3 class="text-2xl font-bold">${phone.name}</h3>
@@ -147,18 +133,17 @@ async function initializeApp() {
                 </div>
                 <div class="md:w-2/3">
                     <h4 class="text-xl font-semibold mb-2" data-translate-key="result_reason">${translations[currentLang]['result_reason']}</h4>
-                    <div class="text-gray-300 mb-6 bg-gray-800/50 p-4 rounded-lg text-left">${reasoningText}</div>
+                    <p class="text-gray-400 mb-6" data-translate-key="result_reason_text">${translations[currentLang]['result_reason_text'].replace('{phoneName}', phone.name)}</p>
                     <h4 class="text-xl font-semibold mb-2" data-translate-key="scores_title">${translations[currentLang]['scores_title']}</h4>
                     <div class="bg-gray-800/60 p-4 rounded-lg">${scoresHTML}</div>
                 </div>
             </div>
-            ${buttonsHTML}`;
+            ${buttonsHTML}`; // <-- SE AÑADEN LOS BOTONES AQUÍ
         resultsSection.classList.remove('hidden');
         resultsSection.scrollIntoView({ behavior: 'smooth' });
     }
 
     function displayNoResults() {
-        lastRecommendation = null; // Limpiamos la última recomendación
         const resultsSection = document.getElementById('results-section');
         resultsSection.innerHTML = `
             <div class="text-center py-8">
@@ -189,14 +174,4 @@ window.setLanguage = function(lang) {
             el.textContent = translations[lang][key];
         }
     });
-
-    // Volver a mostrar el resultado si ya hay uno visible para traducir el texto dinámico
-    const resultsSection = document.getElementById('results-section');
-    if (!resultsSection.classList.contains('hidden') && lastRecommendation && lastRecommendation.phone) {
-        // Re-llamamos a displayResult con los datos guardados
-        const displayResultFunc = document.querySelector('#results-section').__displayResult;
-        if (displayResultFunc) {
-             displayResultFunc(lastRecommendation.phone, lastRecommendation.uses);
-        }
-    }
 }
