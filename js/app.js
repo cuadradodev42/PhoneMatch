@@ -19,7 +19,7 @@ async function initializeApp() {
     // --- 1. OBTENER DATOS DEL SERVIDOR ---
     try {
         // Reemplaza esta URL con la URL de tu backend en Render
-        const backendUrl = 'https://phonemath-backend.onrender.com/api/smartphones';
+        const backendUrl = 'https://phonematch.onrender.com/api/smartphones';
         
         const response = await fetch(backendUrl);
         if (!response.ok) {
