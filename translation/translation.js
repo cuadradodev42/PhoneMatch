@@ -1,10 +1,10 @@
 const translations = {
     en: {
-        app_title: "PhoneMath",
+        app_title: "PhoneMatch",
         app_subtitle: "Find your ideal smartphone based on your use and budget.",
         step1_title: "1. Choose your main uses",
         step2_title: "2. Select your budget",
-        recommend_button: "Find My Phone",
+        recommend_button: "Find My Next Phone",
         gaming: "Gaming",
         photo: "Photography",
         video: "Video",
@@ -31,7 +31,7 @@ const translations = {
         design: "Design"
     },
     es: {
-        app_title: "PhoneMath",
+        app_title: "PhoneMatch",
         app_subtitle: "Encuentra tu smartphone ideal basado en tu uso y presupuesto.",
         step1_title: "1. Elige tus usos principales",
         step2_title: "2. Selecciona tu presupuesto",
