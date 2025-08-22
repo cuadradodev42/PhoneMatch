@@ -7,20 +7,11 @@ let smartphones = []; // Esta se llenará con los datos del servidor
 document.addEventListener('DOMContentLoaded', initializeApp);
 
 async function initializeApp() {
-    
-    try{
-            const response = await fetch('https://phonematch.onrender.com/api/smartphones');
-            if (!response.ok){
-                throw new Error('Error del servidor: ${response.statusText}');
-            }
-            smartphones = await response.json();
-    }catch (error){
-        console.error("no se pudo cargar la lista de móviles:", error);
-            alert("Error: No se pudo conectar con el servidor. Asegúrate de que el servidor (server.js) está en ejecución.");
-            return;
+    // Si estás usando un backend, aquí iría la lógica del fetch.
+    if (typeof window.smartphones !== 'undefined') {
+        smartphones = window.smartphones;
     }
-    
-    // --- CONSTRUIR LA UI ---
+
     const useCaseContainer = document.getElementById('use-case-container');
     const priceRangeContainer = document.getElementById('price-range-container');
     const recommendBtn = document.getElementById('recommend-btn');
@@ -38,7 +29,6 @@ async function initializeApp() {
             card.innerHTML = `<span class="text-4xl mb-2">${useCases[key].icon}</span><span class="font-medium" data-translate-key="${key}"></span>`;
             useCaseContainer.appendChild(card);
         }
-
         priceRangeContainer.innerHTML = '';
         priceRanges.forEach(range => {
             const card = document.createElement('div');
@@ -64,7 +54,6 @@ async function initializeApp() {
                 checkButtonState();
             });
         });
-
         document.querySelectorAll('.price-card').forEach(card => {
             card.addEventListener('click', () => {
                 document.querySelectorAll('.price-card').forEach(c => {
@@ -76,7 +65,6 @@ async function initializeApp() {
                 checkButtonState();
             });
         });
-
         recommendBtn.addEventListener('click', runRecommendation);
     }
 
@@ -86,12 +74,13 @@ async function initializeApp() {
         const bestPhone = calculateRecommendation(selectedUseKeys, selectedPriceId, smartphones, useCases, priceRanges);
 
         if (bestPhone) {
-            displayResult(bestPhone);
+            displayResult(bestPhone, selectedUseKeys); // Pasamos los usos seleccionados
         } else {
             displayNoResults();
         }
     }
 
+    // --- NUEVA FUNCIÓN PARA GENERAR EL TEXTO EXPLICATIVO ---
     function generateReasoningText(phone, selectedUseKeys) {
         const lang = currentLang;
         const useNames = selectedUseKeys.map(key => translations[lang][key] || key).join(', ');
@@ -108,11 +97,9 @@ async function initializeApp() {
         return `${intro}<ul class="list-disc list-inside mt-2 space-y-1">${reasonsList}</ul>`;
     }
 
-
-    function displayResult(phone) {
+    function displayResult(phone, selectedUseKeys) {
         const resultsSection = document.getElementById('results-section');
         
-        // --- LÓGICA PARA CREAR LOS BOTONES DE COMPRA ---
         let buttonsHTML = '';
         if (phone.purchase_links && Object.keys(phone.purchase_links).length > 0) {
             buttonsHTML = `
@@ -127,7 +114,6 @@ async function initializeApp() {
                     </div>
                 </div>`;
         }
-        // --- FIN DE LA LÓGICA DE BOTONES ---
 
         const scoresHTML = Object.entries(phone.scores).map(([key, value]) => {
             if (!value || value <= 0) return '';
@@ -141,11 +127,12 @@ async function initializeApp() {
             </div>`;
         }).join('');
 
+        // --- NUEVO: Llamar a la función que genera el texto ---
         const reasoningText = generateReasoningText(phone, selectedUseKeys);
 
         resultsSection.innerHTML = `
             <h2 class="text-3xl font-bold text-center mb-6" data-translate-key="result_title">${translations[currentLang]['result_title']}</h2>
-            <div class="flex flex-col md:flex-row gap-6 items-center">
+            <div class="flex flex-col md:flex-row gap-8 items-start">
                 <div class="md:w-1/3 text-center">
                     <img src="${phone.image}" alt="${phone.name}" class="rounded-2xl mx-auto shadow-2xl mb-4">
                     <h3 class="text-2xl font-bold">${phone.name}</h3>
@@ -159,12 +146,12 @@ async function initializeApp() {
                 </div>
                 <div class="md:w-2/3">
                     <h4 class="text-xl font-semibold mb-2" data-translate-key="result_reason">${translations[currentLang]['result_reason']}</h4>
-                    <p class="text-gray-400 mb-6" data-translate-key="result_reason_text">${reasoningText}</p>
+                    <p class="text-gray-400 mb-6 bg-gray-800/50 p-4 rounded-lg">${reasoningText}</p>
                     <h4 class="text-xl font-semibold mb-2" data-translate-key="scores_title">${translations[currentLang]['scores_title']}</h4>
                     <div class="bg-gray-800/60 p-4 rounded-lg">${scoresHTML}</div>
                 </div>
             </div>
-            ${buttonsHTML}`; // <-- SE AÑADEN LOS BOTONES AQUÍ
+            ${buttonsHTML}`;
         resultsSection.classList.remove('hidden');
         resultsSection.scrollIntoView({ behavior: 'smooth' });
     }
@@ -185,19 +172,15 @@ async function initializeApp() {
 window.setLanguage = function(lang) {
     currentLang = lang;
     document.documentElement.lang = lang;
-
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.classList.remove('border-blue-500', 'text-blue-400');
-        btn.classList.add('border-transparent', 'text-gray-500');
-    });
-    const activeBtn = document.querySelector(`.lang-btn.${lang}`);
-    activeBtn.classList.add('border-blue-500', 'text-blue-400');
-    activeBtn.classList.remove('border-transparent', 'text-gray-500');
-
     document.querySelectorAll('[data-translate-key]').forEach(el => {
         const key = el.dataset.translateKey;
         if (translations[lang] && translations[lang][key]) {
             el.textContent = translations[lang][key];
         }
     });
+    // Volver a mostrar el resultado si ya hay uno visible para traducir el texto dinámico
+    const resultsSection = document.getElementById('results-section');
+    if (!resultsSection.classList.contains('hidden') && window.lastRecommendation) {
+        displayResult(window.lastRecommendation.phone, window.lastRecommendation.uses);
+    }
 }
