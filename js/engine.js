@@ -1,8 +1,3 @@
-// --- MOTOR DE RECOMENDACIÓN DE PHONEMATH ---
-
-/**
- * Función para normalizar valores de especificaciones a una escala de 0-10.
- */
 function normalizeValue(key, value) {
     if (typeof value === 'boolean') {
         return value ? 10 : 0;
