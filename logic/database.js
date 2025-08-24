@@ -22,3 +22,5 @@ const priceRanges = [
     { id: 'p5', label: '800-1000€', min: 800.01, max: 1000 },
     { id: 'p6', label: '>1000€', min: 1000.01, max: Infinity }
 ];
+
+module.exports = {useCases, priceRanges};

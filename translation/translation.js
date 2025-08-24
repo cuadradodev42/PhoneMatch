@@ -28,6 +28,7 @@ const translations = {
         camera_photo: "Photo Camera",
         camera_video: "Video Camera",
         design: "Design",
+        searching: "Looking for the perfect phone for you",
         // --- NUEVAS FRASES PARA LA EXPLICACIÓN ---
         reason_intro: "You have selected the following uses: {uses}. Based on your selection, the {phoneName} is the perfect smartphone for you within your budget because:",
         reasons: {
@@ -78,6 +79,7 @@ const translations = {
         camera_photo: "Cámara (Foto)",
         camera_video: "Cámara (Vídeo)",
         design: "Diseño",
+        searching: "Buscando el smartphone perfecto para ti",
         // --- NUEVAS FRASES PARA LA EXPLICACIÓN ---
         reason_intro: "Has seleccionado los siguientes usos: {uses}. Basándonos en tu selección, el {phoneName} es el smartphone perfecto para ti dentro de tu presupuesto porque:",
         reasons: {
